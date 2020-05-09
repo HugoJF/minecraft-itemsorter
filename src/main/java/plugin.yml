@@ -1,0 +1,8 @@
+name: ItemSorter
+main: com.denerdtv.itemsorter.ItemSorter
+version: 0.0.1
+author: de_nerdTV
+api-version: "1.15"
+commands:
+  itemsorter:
+    aliases: is
