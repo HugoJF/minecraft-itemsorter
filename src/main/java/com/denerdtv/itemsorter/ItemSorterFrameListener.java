@@ -12,6 +12,7 @@ import org.bukkit.entity.ItemFrame;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.hanging.HangingBreakEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.EquipmentSlot;
@@ -142,13 +143,35 @@ public class ItemSorterFrameListener implements Listener {
             return;
         }
 
-        this.registerInput(used.getType(), base.getLocation());
+        this.registerOutput(used.getType(), base.getLocation());
         this.save();
 
         String itemName = used.getType().toString();
-        int filterCount = this.outputs.get(used.getType()).size();
+//        int filterCount = this.outputs.get(used.getType()).size();
+        int filterCount = this.getMaterialsFromOutput(base.getLocation());
 
         e.getPlayer().sendMessage(SERVER_PREFIX + " Added " + GREEN + itemName + RESET + " filter! This chest has " + filterCount + " filters");
+    }
+
+    @EventHandler
+    public void onItemFrameBroken(final HangingBreakEvent e) {
+        final Entity entity = e.getEntity();
+
+        if (!(entity instanceof ItemFrame)) {
+            return;
+        }
+
+        ItemFrame itemFrame = (ItemFrame) entity;
+        Block behind = this.getBlockBehindItemFrame(itemFrame);
+
+        // This is not a special ItemFrame
+        if (behind.getType() != Material.CHEST) {
+            return;
+        }
+
+        Material material = itemFrame.getItem().getType();
+
+        this.unregisterOutput(material, behind.getLocation());
     }
 
     @EventHandler
@@ -169,16 +192,30 @@ public class ItemSorterFrameListener implements Listener {
 
         Material material = itemFrame.getItem().getType();
 
+        this.unregisterOutput(material, behind.getLocation());
+    }
+
+    private void registerOutput(Material material, Location location) {
+        if (!this.outputs.containsKey(material)) {
+            List<Location> locations = new LinkedList<Location>();
+            this.outputs.put(material, locations);
+        }
+
+        this.outputs.get(material).add(location);
+    }
+
+    private void unregisterOutput(Material material, Location location) {
         List<Location> locations = this.outputs.get(material);
 
         if (locations == null) {
             return;
         }
 
-        if (locations.remove(behind.getLocation())) {
+        if (locations.remove(location)) {
             this.save();
 
-            int filterCount = this.outputs.get(material).size();
+//            int filterCount = this.outputs.get(material).size();
+            int filterCount = this.getMaterialsFromOutput(location);
             Bukkit.broadcastMessage(SERVER_PREFIX + " Removed " + GREEN + material.toString() + RESET + " filter! This chest has " + filterCount + " filters");
         }
     }
@@ -189,13 +226,19 @@ public class ItemSorterFrameListener implements Listener {
         return itemFrame.getLocation().getBlock().getRelative(backFacing);
     }
 
-    private void registerInput(Material material, Location location) {
-        if (!this.outputs.containsKey(material)) {
-            List<Location> locations = new LinkedList<Location>();
-            this.outputs.put(material, locations);
+    public int getMaterialsFromOutput(Location location) {
+        Set<Material> keys = this.outputs.keySet();
+
+        int count = 0;
+        for (Material m: keys) {
+            List<Location> locations = this.outputs.get(m);
+
+            if(locations.contains(location)) {
+                count++;
+            }
         }
 
-        this.outputs.get(material).add(location);
+        return count;
     }
 
     public List<Location> getLocations(Material material) {
