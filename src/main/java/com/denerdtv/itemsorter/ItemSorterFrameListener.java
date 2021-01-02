@@ -163,12 +163,6 @@ public class ItemSorterFrameListener implements Listener {
 
         ItemFrame itemFrame = (ItemFrame) entity;
         Block behind = this.getBlockBehindItemFrame(itemFrame);
-
-        // This is not a special ItemFrame
-        if (behind.getType() != Material.CHEST) {
-            return;
-        }
-
         Material material = itemFrame.getItem().getType();
 
         this.unregisterOutput(material, behind.getLocation());

@@ -3,7 +3,6 @@ package com.denerdtv.itemsorter;
 import com.denerdtv.CommandSignDefinition;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.BlockData;
@@ -13,13 +12,11 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPhysicsEvent;
 import org.bukkit.event.block.SignChangeEvent;
+import org.bukkit.util.Vector;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import static com.denerdtv.itemsorter.ItemSorter.SERVER_PREFIX;
 
@@ -81,7 +78,7 @@ public class ItemSorterSignListener implements CommandSignDefinition {
     public void onSignCreate(SignChangeEvent e) {
         e.getPlayer().sendMessage(SERVER_PREFIX + " Registered input chest!");
 
-        Location location = this.getBaseLocationForSign(e.getBlock());
+        Location location = this.getBaseLocationFromSign(e.getBlock());
 
         if (location != null) {
             this.inputs.add(location);
@@ -92,7 +89,7 @@ public class ItemSorterSignListener implements CommandSignDefinition {
     public void onSignBreak(BlockBreakEvent e) {
         e.getPlayer().sendMessage(SERVER_PREFIX + " Unregistered input chest!");
 
-        Location location = this.getBaseLocationForSign(e.getBlock());
+        Location location = this.getBaseLocationFromSign(e.getBlock());
 
         if (location != null) {
             this.inputs.remove(location);
@@ -101,20 +98,37 @@ public class ItemSorterSignListener implements CommandSignDefinition {
     }
 
     public void onSignPhysics(BlockPhysicsEvent e) {
-        if (e.getBlock().getType() != Material.AIR) {
-            return;
-        }
-
-        Location location = this.getBaseLocationForSign(e.getBlock());
+        Location location = this.findBaseLocationFromLocation(e.getBlock().getLocation());
 
         if (location != null) {
             Bukkit.broadcastMessage(SERVER_PREFIX + " Unregistered input chest!");
             this.inputs.remove(location);
             this.save();
+        } else {
+            Bukkit.broadcastMessage("Could not find location from physics event");
         }
     }
 
-    public Location getBaseLocationForSign(Block block) {
+    public Location findBaseLocationFromLocation(Location location) {
+        List<Vector> vectors = Arrays.asList(
+                new Vector(1, 0, 0),
+                new Vector(-1, 0, 0),
+                new Vector(0, 0, 1),
+                new Vector(0, 0, -1)
+        );
+
+        for (Vector v : vectors) {
+            Location loc = location.clone().add(v);
+
+            if (this.inputs.contains(loc)) {
+                return loc;
+            }
+        }
+
+        return null;
+    }
+
+    public Location getBaseLocationFromSign(Block block) {
         BlockData blockData = block.getBlockData();
 
         if (!(blockData instanceof WallSign)) {
