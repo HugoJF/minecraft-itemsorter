@@ -110,18 +110,25 @@ public class ItemSorter extends JavaPlugin implements CommandExecutor, Listener 
                     continue;
                 }
 
-                int index = (int) Math.round(Math.random() * (outputs.size() - 1));
+                // TODO: undo me
+                boolean found = false;
+                int attempts = 0;
 
-                Location outputLocation = outputs.get(index);
-                Chest output = this.getChestFromLocation(outputLocation);
+                while (!found && ++attempts < 10) {
+                    int index = (int) Math.round(Math.random() * (outputs.size() - 1));
 
-                if (output == null) {
-                    Bukkit.broadcastMessage("There are no chests at output: " + outputLocation.toString());
-                    continue;
+                    Location outputLocation = outputs.get(index);
+                    Chest output = this.getChestFromLocation(outputLocation);
+
+                    if (output == null) {
+//                    Bukkit.broadcastMessage("There are no chests at output: " + outputLocation.toString());
+                        continue;
+                    }
+
+                    output.getInventory().addItem(item.asOne());
+                    inventory.removeItem(item.asOne());
+                    found = true;
                 }
-
-                output.getInventory().addItem(item.asOne());
-                inventory.removeItem(item.asOne());
 
                 break;
             }
@@ -139,7 +146,7 @@ public class ItemSorter extends JavaPlugin implements CommandExecutor, Listener 
         }
 
         // Outputs
-        for (Material m: this.ifl.getMaterials()) {
+        for (Material m : this.ifl.getMaterials()) {
             for (Location l : this.ifl.getLocations(m)) {
                 this.particleSystem.spawnCenter(NOTIFICATION, l);
             }
