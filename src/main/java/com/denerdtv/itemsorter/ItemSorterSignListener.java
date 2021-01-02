@@ -1,6 +1,7 @@
 package com.denerdtv.itemsorter;
 
 import com.denerdtv.CommandSignDefinition;
+import com.denerdtv.CommandSignManager;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
@@ -22,6 +23,8 @@ import static com.denerdtv.itemsorter.ItemSorter.SERVER_PREFIX;
 
 public class ItemSorterSignListener implements CommandSignDefinition {
     private final Set<Location> inputs = new HashSet<>();
+
+    private CommandSignManager manager;
 
     // Persistence
     private final File file;

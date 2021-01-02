@@ -63,7 +63,7 @@ public class ItemSorter extends JavaPlugin implements CommandExecutor, Listener 
 
         this.plugin = Bukkit.getPluginManager();
 
-        this.csm = new CommandSignManager();
+        this.csm = new CommandSignManager(ItemSorter.getInstance().getDataFolder() + "/inputs-signs.yml");
         this.isc = new ItemSorterCommand();
 
         this.ifl = new ItemSorterFrameListener();
@@ -73,7 +73,7 @@ public class ItemSorter extends JavaPlugin implements CommandExecutor, Listener 
         this.plugin.registerEvents(this.csm, this);
         this.plugin.registerEvents(this.ifl, this);
 
-        this.csm.addDefinition(this.sl);
+        this.csm.addDefinition("sign-listener", this.sl);
 
         particleSystem.addConfiguration(NOTIFICATION, ParticleConfiguration.create(Particle.VILLAGER_HAPPY).setAmount(15).setOffset(0.30));
 
